@@ -1,11 +1,13 @@
 #include <Servo.h> 
 
 const int photo = A0;
+int light_a;
 int light;
 
 const int servo_pins[] = {11, 6};
 const int NUM_SERVOS = 2;
 Servo servos[2];
+int pos;
  
 void setup() 
 { 
@@ -17,27 +19,40 @@ void setup()
   }
   
   Serial.begin(9600);
+  
+  light_a = analogRead(photo);
 } 
  
 void loop() 
 { 
-  light = analogRead(photo);
-  Serial.println(light);
-  for(int pos = 0; pos < 90; pos += 1)  // goes from 0 degrees to 180 degrees 
-  {                                  // in steps of 1 degree 
-    move(pos);
-  } 
-  
-  for(int pos = 170; pos>=10; pos-=1)     // goes from 180 degrees to 0 degrees 
-  {                                
-    move(pos);
-  } 
+  int temp_light = analogRead(photo);
+  if( abs(temp_light - light_a) > 5){
+    light_a = temp_light;
+    light = map(light_a, 350, 800, 10, 170);
+    if(light > 170){ light = 170; }
+    if(light < 10){ light = 10; }
+    move(light); 
+  }
 }
 
-void move(int pos){
-  for(int s = 0; s < NUM_SERVOS ; s++){
-    servos[s].write(pos);              // tell servo to go to position in variable 'pos' 
+void move(int target){
+  if( target > pos){
+    for(int t = pos; t < target ; t++){
+      for(int s = 0; s < NUM_SERVOS ; s++){
+        servos[s].write(t);              // tell servo to go to position in variable 'pos' 
+      }
+      pos = t;
+      delay(15);
+      //Serial.println(String(light_a) );
+    } 
+  } else {
+    for(int t = pos; t > target ; t--){
+      for(int s = 0; s < NUM_SERVOS ; s++){
+        servos[s].write(t);              // tell servo to go to position in variable 'pos' 
+      }
+      pos = t;
+      delay(15);
+       // Serial.println(String(light_a) );
+    } 
   }
-  
-  delay(15);
 }
